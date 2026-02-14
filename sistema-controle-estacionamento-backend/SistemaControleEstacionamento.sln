@@ -5,6 +5,12 @@ VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaControleEstacionamento.Api", "SistemaControleEstacionamento.Api\SistemaControleEstacionamento.Api.csproj", "{F72D59BC-1A43-4B75-80A9-069720833C86}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaControleEstacionamento.Domain", "SistemaControleEstacionamento.Domain\SistemaControleEstacionamento.Domain.csproj", "{C2CAA54E-1448-4CB1-80BF-7867938F0A42}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaControleEstacionamento.Application", "SistemaControleEstacionamento.Application\SistemaControleEstacionamento.Application.csproj", "{385534E3-085B-4B78-AF63-DB1B51863C37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaControleEstacionamento.Infrastructure", "SistemaControleEstacionamento.Infrastructure\SistemaControleEstacionamento.Infrastructure.csproj", "{EC67AA0E-E76E-4275-A122-4D4C4339AAFE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +21,18 @@ Global
 		{F72D59BC-1A43-4B75-80A9-069720833C86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F72D59BC-1A43-4B75-80A9-069720833C86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F72D59BC-1A43-4B75-80A9-069720833C86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2CAA54E-1448-4CB1-80BF-7867938F0A42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2CAA54E-1448-4CB1-80BF-7867938F0A42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2CAA54E-1448-4CB1-80BF-7867938F0A42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2CAA54E-1448-4CB1-80BF-7867938F0A42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{385534E3-085B-4B78-AF63-DB1B51863C37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{385534E3-085B-4B78-AF63-DB1B51863C37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{385534E3-085B-4B78-AF63-DB1B51863C37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{385534E3-085B-4B78-AF63-DB1B51863C37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC67AA0E-E76E-4275-A122-4D4C4339AAFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC67AA0E-E76E-4275-A122-4D4C4339AAFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC67AA0E-E76E-4275-A122-4D4C4339AAFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC67AA0E-E76E-4275-A122-4D4C4339AAFE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
