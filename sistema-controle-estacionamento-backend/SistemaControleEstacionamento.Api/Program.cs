@@ -21,7 +21,20 @@ builder.Services.AddControllers()
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Sistema de Controle de Estacionamento API",
+        Version = "v1",
+        Description = "API RESTful para gerenciamento de estacionamento com suporte a concorrência otimista, paginação e filtros avançados. Todas as datas utilizam formato ISO 8601 em UTC."
+    });
+
+    // Incluir comentários XML
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
+});
 
 // Database
 builder.Services.AddDbContext<EstacionamentoDbContext>(options =>
