@@ -1,6 +1,8 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using SistemaControleEstacionamento.Application.DTOs.Common;
 using SistemaControleEstacionamento.Application.DTOs.Movimentacao;
+using SistemaControleEstacionamento.Application.Extensions;
 using SistemaControleEstacionamento.Application.Interfaces;
 using SistemaControleEstacionamento.Domain.Exceptions;
 using SistemaControleEstacionamento.Domain.Interfaces;
@@ -122,6 +124,59 @@ public class MovimentacaoService : IMovimentacaoService
         }
 
         return _mapper.Map<IEnumerable<SessaoDto>>(sessoes);
+    }
+
+    public async Task<PagedResult<SessaoDto>> ListarSessoesAsync(SessaoQueryParams queryParams)
+    {
+        IQueryable<Domain.Entities.Sessao> query = _sessaoRepository.GetQueryable()
+            .Include(s => s.Veiculo);
+
+        // Filtro de status
+        var status = queryParams.Status.ToLower();
+        if (status == "ativas")
+            query = query.Where(s => s.Ativa);
+        else if (status == "fechadas")
+            query = query.Where(s => !s.Ativa);
+
+        // Filtro de placa
+        if (!string.IsNullOrWhiteSpace(queryParams.Placa))
+        {
+            var placaNormalizada = queryParams.Placa.Trim().ToUpper().Replace("-", "").Replace(" ", "");
+            query = query.Where(s => s.Veiculo.Placa.Contains(placaNormalizada));
+        }
+
+        // Filtro de veículo ID
+        if (queryParams.VeiculoId.HasValue)
+            query = query.Where(s => s.VeiculoId == queryParams.VeiculoId.Value);
+
+        // Filtro de período
+        if (queryParams.DataInicio.HasValue)
+        {
+            var dataInicioOffset = new DateTimeOffset(queryParams.DataInicio.Value, TimeSpan.Zero);
+            query = query.Where(s => s.DataHoraEntrada >= dataInicioOffset);
+        }
+
+        if (queryParams.DataFim.HasValue)
+        {
+            var dataFimOffset = new DateTimeOffset(queryParams.DataFim.Value, TimeSpan.Zero);
+            query = query.Where(s => s.DataHoraEntrada <= dataFimOffset);
+        }
+
+        // Ordenação
+        query = query.ApplySorting(queryParams.SortBy, queryParams.SortOrder);
+
+        query = query.AsNoTracking();
+
+        // Paginação
+        var pagedSessoes = await query.ToPagedResultAsync(queryParams.Page, queryParams.PageSize);
+
+        var sessoesDto = _mapper.Map<IEnumerable<SessaoDto>>(pagedSessoes.Data);
+
+        return new PagedResult<SessaoDto>
+        {
+            Data = sessoesDto,
+            Pagination = pagedSessoes.Pagination
+        };
     }
 }
 

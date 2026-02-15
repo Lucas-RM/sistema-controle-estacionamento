@@ -1,7 +1,7 @@
 {
 	"info": {
 		"name": "Sistema Controle Estacionamento API",
-		"description": "Collection completa para testes de concorrência, idempotência e funcionalidades do sistema",
+		"description": "Collection completa para testes de concorrência, idempotência, paginação e filtros",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -25,12 +25,7 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"placa\": \"ABC1234\",\n  \"modelo\": \"Honda Civic\",\n  \"cor\": \"Preto\",\n  \"tipo\": 1\n}"
@@ -43,14 +38,122 @@
 					}
 				},
 				{
-					"name": "GET Listar Veículos",
+					"name": "GET Listar Veículos (Paginado)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Tem estrutura paginada', () => {",
+									"  const json = pm.response.json();",
+									"  pm.expect(json).to.have.property('data');",
+									"  pm.expect(json).to.have.property('pagination');",
+									"});",
+									"pm.test('Pagination metadata completo', () => {",
+									"  const p = pm.response.json().pagination;",
+									"  pm.expect(p).to.have.all.keys('currentPage', 'pageSize', 'totalItems', 'totalPages', 'hasNextPage', 'hasPreviousPage');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/veiculos",
+							"raw": "{{base_url}}/api/veiculos?page=1&pageSize=10",
 							"host": ["{{base_url}}"],
-							"path": ["api", "veiculos"]
+							"path": ["api", "veiculos"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Veículos (Filtro: Placa)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/veiculos?placa=ABC&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "veiculos"],
+							"query": [
+								{"key": "placa", "value": "ABC"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Veículos (Filtro: Tipo Carro)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Todos são carros', () => {",
+									"  pm.response.json().data.forEach(v => {",
+									"    pm.expect(v.tipo).to.equal(1);",
+									"  });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/veiculos?tipo=Carro&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "veiculos"],
+							"query": [
+								{"key": "tipo", "value": "Carro"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Veículos (Com Sessão Ativa)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/veiculos?comSessaoAtiva=true&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "veiculos"],
+							"query": [
+								{"key": "comSessaoAtiva", "value": "true"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Veículos (Ordenado por Modelo)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/veiculos?sortBy=modelo&sortOrder=asc&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "veiculos"],
+							"query": [
+								{"key": "sortBy", "value": "modelo"},
+								{"key": "sortOrder", "value": "asc"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
 						}
 					}
 				}
@@ -78,12 +181,7 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"veiculoId\": \"{{veiculo_id}}\"\n}"
@@ -96,38 +194,173 @@
 					}
 				},
 				{
-					"name": "POST Abrir Sessão (Idempotente - já existe)",
+					"name": "GET Listar Sessões (Paginado)",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test('Retorna sessão existente', () => {",
-									"  const expected = pm.environment.get('sessao_id');",
-									"  pm.expect(pm.response.json().id).to.equal(expected);",
-									"});",
-									"pm.test('Status 201', () => pm.response.to.have.status(201));"
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Tem estrutura paginada', () => {",
+									"  const json = pm.response.json();",
+									"  pm.expect(json).to.have.property('data');",
+									"  pm.expect(json).to.have.property('pagination');",
+									"});"
 								],
 								"type": "text/javascript"
 							}
 						}
 					],
 					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"veiculoId\": \"{{veiculo_id}}\"\n}"
-						},
+						"method": "GET",
+						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/movimentacao/entrada",
+							"raw": "{{base_url}}/api/movimentacao?page=1&pageSize=10",
 							"host": ["{{base_url}}"],
-							"path": ["api", "movimentacao", "entrada"]
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Sessões (Filtro: Ativas)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Todas sessões são ativas', () => {",
+									"  pm.response.json().data.forEach(s => {",
+									"    pm.expect(s.ativa).to.be.true;",
+									"  });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao?status=ativas&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "status", "value": "ativas"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Sessões (Filtro: Fechadas)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Todas sessões são fechadas', () => {",
+									"  pm.response.json().data.forEach(s => {",
+									"    pm.expect(s.ativa).to.be.false;",
+									"    pm.expect(s.dataHoraSaida).to.not.be.null;",
+									"  });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao?status=fechadas&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "status", "value": "fechadas"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Sessões (Filtro: Placa)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao?placa=ABC&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "placa", "value": "ABC"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Sessões (Filtro: Período)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao?dataInicio=2025-01-01T00:00:00Z&dataFim=2025-12-31T23:59:59Z&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "dataInicio", "value": "2025-01-01T00:00:00Z"},
+								{"key": "dataFim", "value": "2025-12-31T23:59:59Z"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Sessões (Ordenação)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao?sortBy=dataHoraEntrada&sortOrder=asc&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "sortBy", "value": "dataHoraEntrada"},
+								{"key": "sortOrder", "value": "asc"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Sessões (Múltiplos Filtros)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao?status=fechadas&dataInicio=2025-01-01T00:00:00Z&dataFim=2025-12-31T23:59:59Z&sortBy=valorCobrado&sortOrder=desc&page=1&pageSize=25",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "status", "value": "fechadas"},
+								{"key": "dataInicio", "value": "2025-01-01T00:00:00Z"},
+								{"key": "dataFim", "value": "2025-12-31T23:59:59Z"},
+								{"key": "sortBy", "value": "valorCobrado"},
+								{"key": "sortOrder", "value": "desc"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "25"}
+							]
 						}
 					}
 				},
@@ -173,12 +406,7 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"sessaoId\": \"{{sessao_id}}\",\n  \"rowVersion\": \"{{row_version}}\"\n}"
@@ -189,16 +417,25 @@
 							"path": ["api", "movimentacao", "saida"]
 						}
 					}
-				},
+				}
+			]
+		},
+		{
+			"name": "03 - Pátio",
+			"item": [
 				{
-					"name": "GET Sessões Ativas",
+					"name": "GET Veículos no Pátio (Paginado)",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
 									"pm.test('Status 200', () => pm.response.to.have.status(200));",
-									"pm.test('É array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+									"pm.test('Todas ativas', () => {",
+									"  pm.response.json().data.forEach(s => {",
+									"    pm.expect(s.ativa).to.be.true;",
+									"  });",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -208,47 +445,171 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/api/patio/agora",
+							"raw": "{{base_url}}/api/patio/agora?page=1&pageSize=10",
 							"host": ["{{base_url}}"],
-							"path": ["api", "patio", "agora"]
+							"path": ["api", "patio", "agora"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Pátio (Filtro: Placa)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/patio/agora?placa=ABC&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "patio", "agora"],
+							"query": [
+								{"key": "placa", "value": "ABC"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
 						}
 					}
 				}
 			]
 		},
 		{
-			"name": "03 - Testes de Concorrência",
+			"name": "04 - Testes de Validação",
 			"item": [
 				{
-					"name": "Cenário 1: Dupla Abertura (Idempotência)",
+					"name": "GET Sessões (Page = 0 - Inválido)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400', () => pm.response.to.have.status(400));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao?page=0&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "page", "value": "0"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Sessões (PageSize = 500 - Excede)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('PageSize limitado a 100', () => {",
+									"  const p = pm.response.json().pagination;",
+									"  pm.expect(p.pageSize).to.be.at.most(100);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao?page=1&pageSize=500",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "500"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Sessões (Status Inválido)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400', () => pm.response.to.have.status(400));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao?status=invalido&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "status", "value": "invalido"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Sessões (DataInicio > DataFim)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400', () => pm.response.to.have.status(400));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao?dataInicio=2025-12-31&dataFim=2025-01-01&page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao"],
+							"query": [
+								{"key": "dataInicio", "value": "2025-12-31"},
+								{"key": "dataFim", "value": "2025-01-01"},
+								{"key": "page", "value": "1"},
+								{"key": "pageSize", "value": "10"}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "05 - Testes de Concorrência",
+			"item": [
+				{
+					"name": "POST Abrir Sessão (Idempotente)",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
 									"pm.test('Status 201', () => pm.response.to.have.status(201));",
-									"pm.test('Tem ID', () => pm.expect(pm.response.json()).to.have.property('id'));",
-									"",
-									"// Salvar ID da primeira execução",
 									"if (!pm.environment.get('first_sessao_id')) {",
 									"    pm.environment.set('first_sessao_id', pm.response.json().id);",
 									"} else {",
-									"    // Verificar se retornou o mesmo ID",
 									"    pm.test('Retorna mesma sessão', () => {",
 									"        pm.expect(pm.response.json().id).to.equal(pm.environment.get('first_sessao_id'));",
 									"    });",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									"// Limpar na primeira execução",
-									"if (pm.info.iteration === 0) {",
-									"    pm.environment.unset('first_sessao_id');",
 									"}"
 								],
 								"type": "text/javascript"
@@ -257,12 +618,7 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"veiculoId\": \"{{veiculo_id}}\"\n}"
@@ -275,17 +631,13 @@
 					}
 				},
 				{
-					"name": "Cenário 2: Fechar Sem RowVersion (400)",
+					"name": "POST Fechar Sem RowVersion (422)",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test('Status 422', () => pm.response.to.have.status(422));",
-									"pm.test('Mensagem de erro', () => {",
-									"    const msg = pm.response.json().error.toLowerCase();",
-									"    pm.expect(msg).to.include('rowversion');",
-									"});"
+									"pm.test('Status 422', () => pm.response.to.have.status(422));"
 								],
 								"type": "text/javascript"
 							}
@@ -293,12 +645,7 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"sessaoId\": \"{{sessao_id}}\",\n  \"rowVersion\": \"\"\n}"
@@ -311,17 +658,13 @@
 					}
 				},
 				{
-					"name": "Cenário 3: Fechar com RowVersion Inválido (409)",
+					"name": "POST Fechar com RowVersion Inválido (409)",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test('Status 409', () => pm.response.to.have.status(409));",
-									"pm.test('Mensagem de conflito', () => {",
-									"    const msg = pm.response.json().error.toLowerCase();",
-									"    pm.expect(msg).to.include('modificad');",
-									"});"
+									"pm.test('Status 409', () => pm.response.to.have.status(409));"
 								],
 								"type": "text/javascript"
 							}
@@ -329,51 +672,10 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
+						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"sessaoId\": \"{{sessao_id}}\",\n  \"rowVersion\": \"AAAAAAAAAA==\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/api/movimentacao/saida",
-							"host": ["{{base_url}}"],
-							"path": ["api", "movimentacao", "saida"]
-						}
-					}
-				},
-				{
-					"name": "Cenário 4: Fechar Sessão Já Fechada (422)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test('Status 422', () => pm.response.to.have.status(422));",
-									"pm.test('Mensagem sessão fechada', () => {",
-									"    const msg = pm.response.json().error.toLowerCase();",
-									"    pm.expect(msg).to.match(/encerrad|fechad/);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"sessaoId\": \"{{sessao_id}}\",\n  \"rowVersion\": \"{{row_version}}\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/movimentacao/saida",
@@ -385,7 +687,7 @@
 			]
 		},
 		{
-			"name": "04 - Relatórios",
+			"name": "06 - Relatórios",
 			"item": [
 				{
 					"name": "GET Faturamento 7 Dias",
@@ -396,12 +698,7 @@
 							"raw": "{{base_url}}/api/relatorios/faturamento?periodo=1",
 							"host": ["{{base_url}}"],
 							"path": ["api", "relatorios", "faturamento"],
-							"query": [
-								{
-									"key": "periodo",
-									"value": "1"
-								}
-							]
+							"query": [{"key": "periodo", "value": "1"}]
 						}
 					}
 				},

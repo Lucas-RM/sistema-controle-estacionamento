@@ -1,3 +1,4 @@
+using SistemaControleEstacionamento.Application.DTOs.Common;
 using SistemaControleEstacionamento.Application.DTOs.Veiculo;
 
 namespace SistemaControleEstacionamento.Application.Interfaces;
@@ -9,5 +10,6 @@ public interface IVeiculoService
     Task<IEnumerable<VeiculoDto>> GetAllAsync();
     Task<VeiculoDto?> GetByIdAsync(Guid id);
     Task<VeiculoDto?> GetByPlacaAsync(string placa);
+    Task<PagedResult<VeiculoDto>> ListarVeiculosAsync(VeiculoQueryParams queryParams);
 }
 

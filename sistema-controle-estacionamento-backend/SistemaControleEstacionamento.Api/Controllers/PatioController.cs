@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SistemaControleEstacionamento.Application.DTOs.Common;
 using SistemaControleEstacionamento.Application.DTOs.Movimentacao;
 using SistemaControleEstacionamento.Application.Interfaces;
 
@@ -16,9 +17,10 @@ public class PatioController : ControllerBase
     }
 
     [HttpGet("agora")]
-    public async Task<ActionResult<IEnumerable<SessaoDto>>> GetVeiculosNoPatio([FromQuery] string? placa = null)
+    public async Task<ActionResult<PagedResult<SessaoDto>>> GetVeiculosNoPatio([FromQuery] SessaoQueryParams queryParams)
     {
-        var sessoes = await _movimentacaoService.GetSessoesAtivasAsync(placa);
+        queryParams.Status = "ativas";
+        var sessoes = await _movimentacaoService.ListarSessoesAsync(queryParams);
         return Ok(sessoes);
     }
 }

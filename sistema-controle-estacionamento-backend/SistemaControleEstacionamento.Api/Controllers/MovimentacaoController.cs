@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SistemaControleEstacionamento.Application.DTOs.Common;
 using SistemaControleEstacionamento.Application.DTOs.Movimentacao;
 using SistemaControleEstacionamento.Application.Interfaces;
 
@@ -36,5 +37,11 @@ public class MovimentacaoController : ControllerBase
         return Ok(new { valor });
     }
 
+    [HttpGet]
+    public async Task<ActionResult<PagedResult<SessaoDto>>> ListarSessoes([FromQuery] SessaoQueryParams queryParams)
+    {
+        var sessoes = await _movimentacaoService.ListarSessoesAsync(queryParams);
+        return Ok(sessoes);
+    }
 }
 

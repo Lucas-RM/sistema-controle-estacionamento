@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SistemaControleEstacionamento.Application.DTOs.Common;
 using SistemaControleEstacionamento.Application.DTOs.Veiculo;
 using SistemaControleEstacionamento.Application.Interfaces;
 
@@ -44,9 +45,9 @@ public class VeiculosController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<VeiculoDto>>> GetAll()
+    public async Task<ActionResult<PagedResult<VeiculoDto>>> GetAll([FromQuery] VeiculoQueryParams queryParams)
     {
-        var veiculos = await _veiculoService.GetAllAsync();
+        var veiculos = await _veiculoService.ListarVeiculosAsync(queryParams);
         return Ok(veiculos);
     }
 

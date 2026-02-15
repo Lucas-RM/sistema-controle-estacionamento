@@ -1,6 +1,10 @@
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using SistemaControleEstacionamento.Application.DTOs.Common;
 using SistemaControleEstacionamento.Application.DTOs.Veiculo;
+using SistemaControleEstacionamento.Application.Extensions;
 using SistemaControleEstacionamento.Application.Interfaces;
+using SistemaControleEstacionamento.Domain.Enums;
 using SistemaControleEstacionamento.Domain.Interfaces;
 
 namespace SistemaControleEstacionamento.Application.Services;
@@ -67,6 +71,64 @@ public class VeiculoService : IVeiculoService
         var placaNormalizada = NormalizarPlaca(placa);
         var veiculo = await _repository.GetByPlacaAsync(placaNormalizada);
         return veiculo == null ? null : _mapper.Map<VeiculoDto>(veiculo);
+    }
+
+    public async Task<PagedResult<VeiculoDto>> ListarVeiculosAsync(VeiculoQueryParams queryParams)
+    {
+        var query = _repository.GetQueryable();
+
+        // Filtro de placa
+        if (!string.IsNullOrWhiteSpace(queryParams.Placa))
+        {
+            var placaNormalizada = NormalizarPlaca(queryParams.Placa);
+            query = query.Where(v => v.Placa.Contains(placaNormalizada));
+        }
+
+        // Filtro de modelo
+        if (!string.IsNullOrWhiteSpace(queryParams.Modelo))
+        {
+            var modeloNormalizado = queryParams.Modelo.Trim().ToUpper();
+            query = query.Where(v => v.Modelo != null && v.Modelo.ToUpper().Contains(modeloNormalizado));
+        }
+
+        // Filtro de cor
+        if (!string.IsNullOrWhiteSpace(queryParams.Cor))
+        {
+            var corNormalizada = queryParams.Cor.Trim().ToUpper();
+            query = query.Where(v => v.Cor != null && v.Cor.ToUpper().Contains(corNormalizada));
+        }
+
+        // Filtro de tipo
+        if (!string.IsNullOrWhiteSpace(queryParams.Tipo))
+        {
+            if (Enum.TryParse<TipoVeiculo>(queryParams.Tipo, out var tipo))
+                query = query.Where(v => v.Tipo == tipo);
+        }
+
+        // Filtro de sessão ativa
+        if (queryParams.ComSessaoAtiva.HasValue)
+        {
+            if (queryParams.ComSessaoAtiva.Value)
+                query = query.Where(v => v.Sessoes.Any(s => s.Ativa));
+            else
+                query = query.Where(v => !v.Sessoes.Any(s => s.Ativa));
+        }
+
+        // Ordenação
+        query = query.ApplySorting(queryParams.SortBy, queryParams.SortOrder);
+
+        query = query.AsNoTracking();
+
+        // Paginação
+        var pagedVeiculos = await query.ToPagedResultAsync(queryParams.Page, queryParams.PageSize);
+
+        var veiculosDto = _mapper.Map<IEnumerable<VeiculoDto>>(pagedVeiculos.Data);
+
+        return new PagedResult<VeiculoDto>
+        {
+            Data = veiculosDto,
+            Pagination = pagedVeiculos.Pagination
+        };
     }
 
     private string NormalizarPlaca(string placa)
