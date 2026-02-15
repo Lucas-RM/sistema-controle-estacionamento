@@ -38,6 +38,12 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual async Task<T> AddAsync(T entity)
     {
+        // Gerar RowVersion para Sessao
+        if (entity is Domain.Entities.Sessao sessao)
+        {
+            sessao.RowVersion = Guid.NewGuid().ToString();
+        }
+        
         await _dbSet.AddAsync(entity);
         await _context.SaveChangesAsync();
         return entity;
@@ -45,6 +51,12 @@ public class Repository<T> : IRepository<T> where T : class
 
     public virtual async Task UpdateAsync(T entity)
     {
+        // Atualizar RowVersion para Sessao
+        if (entity is Domain.Entities.Sessao sessao)
+        {
+            sessao.RowVersion = Guid.NewGuid().ToString();
+        }
+        
         _dbSet.Update(entity);
         await _context.SaveChangesAsync();
     }

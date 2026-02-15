@@ -51,10 +51,10 @@ public class EstacionamentoDbContext : DbContext
                 .HasForeignKey(e => e.VeiculoId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            // RowVersion para concorrência otimista
+            // RowVersion para concorrência otimista (SQLite não suporta IsRowVersion)
             entity.Property(e => e.RowVersion)
-                .IsRowVersion()
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(36);
             
             // Unique Index filtrado para garantir apenas uma sessão ativa por veículo
             entity.HasIndex(e => e.VeiculoId)

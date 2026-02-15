@@ -76,8 +76,7 @@ public class MovimentacaoService : IMovimentacaoService
             throw new BusinessException("Não é possível fechar uma sessão que já foi encerrada.");
 
         // Validar RowVersion
-        var rowVersionBytes = Convert.FromBase64String(dto.RowVersion);
-        if (!sessao.RowVersion.SequenceEqual(rowVersionBytes))
+        if (sessao.RowVersion != dto.RowVersion)
             throw new ConcurrencyException("A sessão foi modificada por outro usuário. Busque os dados atualizados e tente novamente.");
 
         var dataHoraSaida = DateTimeOffset.UtcNow;

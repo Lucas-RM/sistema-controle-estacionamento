@@ -8,7 +8,7 @@ public class Sessao
     public DateTimeOffset? DataHoraSaida { get; set; }
     public decimal? ValorCobrado { get; set; }
     public bool Ativa { get; set; }
-    public byte[] RowVersion { get; set; } = null!;
+    public string RowVersion { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }
 
