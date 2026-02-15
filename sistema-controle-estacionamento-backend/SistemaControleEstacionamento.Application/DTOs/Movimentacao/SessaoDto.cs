@@ -11,6 +11,7 @@ public class SessaoDto
     public DateTimeOffset? DataHoraSaida { get; set; }
     public decimal? ValorCobrado { get; set; }
     public bool Ativa { get; set; }
+    public string RowVersion { get; set; } = string.Empty;
     public TimeSpan? TempoPermanencia { get; set; }
 }
 

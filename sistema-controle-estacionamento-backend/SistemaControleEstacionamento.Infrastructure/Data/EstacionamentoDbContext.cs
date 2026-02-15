@@ -50,8 +50,18 @@ public class EstacionamentoDbContext : DbContext
                 .WithMany(v => v.Sessoes)
                 .HasForeignKey(e => e.VeiculoId)
                 .OnDelete(DeleteBehavior.Restrict);
-            entity.HasIndex(e => new { e.VeiculoId, e.Ativa })
+            
+            // RowVersion para concorrência otimista
+            entity.Property(e => e.RowVersion)
+                .IsRowVersion()
+                .IsRequired();
+            
+            // Unique Index filtrado para garantir apenas uma sessão ativa por veículo
+            entity.HasIndex(e => e.VeiculoId)
+                .IsUnique()
+                .HasDatabaseName("IX_Sessoes_VeiculoId_Ativa_Unique")
                 .HasFilter("[Ativa] = 1");
+            
             entity.Property(e => e.ValorCobrado)
                 .HasPrecision(18, 2);
             

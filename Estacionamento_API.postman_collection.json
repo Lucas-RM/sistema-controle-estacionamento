@@ -1,0 +1,423 @@
+{
+	"info": {
+		"name": "Sistema Controle Estacionamento API",
+		"description": "Collection completa para testes de concorrência, idempotência e funcionalidades do sistema",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01 - Veículos",
+			"item": [
+				{
+					"name": "POST Criar Veículo (BR)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('Tem ID', () => pm.expect(pm.response.json()).to.have.property('id'));",
+									"pm.environment.set('veiculo_id', pm.response.json().id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"placa\": \"ABC1234\",\n  \"modelo\": \"Honda Civic\",\n  \"cor\": \"Preto\",\n  \"tipo\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/veiculos",
+							"host": ["{{base_url}}"],
+							"path": ["api", "veiculos"]
+						}
+					}
+				},
+				{
+					"name": "GET Listar Veículos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/veiculos",
+							"host": ["{{base_url}}"],
+							"path": ["api", "veiculos"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "02 - Sessões",
+			"item": [
+				{
+					"name": "POST Abrir Sessão",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('Sessão ativa', () => pm.expect(pm.response.json().ativa).to.be.true);",
+									"pm.test('Tem RowVersion', () => pm.expect(pm.response.json()).to.have.property('rowVersion'));",
+									"pm.environment.set('sessao_id', pm.response.json().id);",
+									"pm.environment.set('row_version', pm.response.json().rowVersion);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"veiculoId\": \"{{veiculo_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao/entrada",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao", "entrada"]
+						}
+					}
+				},
+				{
+					"name": "POST Abrir Sessão (Idempotente - já existe)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Retorna sessão existente', () => {",
+									"  const expected = pm.environment.get('sessao_id');",
+									"  pm.expect(pm.response.json().id).to.equal(expected);",
+									"});",
+									"pm.test('Status 201', () => pm.response.to.have.status(201));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"veiculoId\": \"{{veiculo_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao/entrada",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao", "entrada"]
+						}
+					}
+				},
+				{
+					"name": "GET Calcular Valor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Tem valor', () => pm.expect(pm.response.json()).to.have.property('valor'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao/calcular-valor/{{sessao_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao", "calcular-valor", "{{sessao_id}}"]
+						}
+					}
+				},
+				{
+					"name": "POST Fechar Sessão",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Sessão inativa', () => pm.expect(pm.response.json().ativa).to.be.false);",
+									"pm.test('Tem valor cobrado', () => pm.expect(pm.response.json().valorCobrado).to.be.above(0));",
+									"pm.test('Tem data saída', () => pm.expect(pm.response.json()).to.have.property('dataHoraSaida'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sessaoId\": \"{{sessao_id}}\",\n  \"rowVersion\": \"{{row_version}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao/saida",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao", "saida"]
+						}
+					}
+				},
+				{
+					"name": "GET Sessões Ativas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('É array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/patio/agora",
+							"host": ["{{base_url}}"],
+							"path": ["api", "patio", "agora"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "03 - Testes de Concorrência",
+			"item": [
+				{
+					"name": "Cenário 1: Dupla Abertura (Idempotência)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.test('Tem ID', () => pm.expect(pm.response.json()).to.have.property('id'));",
+									"",
+									"// Salvar ID da primeira execução",
+									"if (!pm.environment.get('first_sessao_id')) {",
+									"    pm.environment.set('first_sessao_id', pm.response.json().id);",
+									"} else {",
+									"    // Verificar se retornou o mesmo ID",
+									"    pm.test('Retorna mesma sessão', () => {",
+									"        pm.expect(pm.response.json().id).to.equal(pm.environment.get('first_sessao_id'));",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Limpar na primeira execução",
+									"if (pm.info.iteration === 0) {",
+									"    pm.environment.unset('first_sessao_id');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"veiculoId\": \"{{veiculo_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao/entrada",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao", "entrada"]
+						}
+					}
+				},
+				{
+					"name": "Cenário 2: Fechar Sem RowVersion (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 422', () => pm.response.to.have.status(422));",
+									"pm.test('Mensagem de erro', () => {",
+									"    const msg = pm.response.json().error.toLowerCase();",
+									"    pm.expect(msg).to.include('rowversion');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sessaoId\": \"{{sessao_id}}\",\n  \"rowVersion\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao/saida",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao", "saida"]
+						}
+					}
+				},
+				{
+					"name": "Cenário 3: Fechar com RowVersion Inválido (409)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 409', () => pm.response.to.have.status(409));",
+									"pm.test('Mensagem de conflito', () => {",
+									"    const msg = pm.response.json().error.toLowerCase();",
+									"    pm.expect(msg).to.include('modificad');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sessaoId\": \"{{sessao_id}}\",\n  \"rowVersion\": \"AAAAAAAAAA==\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao/saida",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao", "saida"]
+						}
+					}
+				},
+				{
+					"name": "Cenário 4: Fechar Sessão Já Fechada (422)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 422', () => pm.response.to.have.status(422));",
+									"pm.test('Mensagem sessão fechada', () => {",
+									"    const msg = pm.response.json().error.toLowerCase();",
+									"    pm.expect(msg).to.match(/encerrad|fechad/);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sessaoId\": \"{{sessao_id}}\",\n  \"rowVersion\": \"{{row_version}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/movimentacao/saida",
+							"host": ["{{base_url}}"],
+							"path": ["api", "movimentacao", "saida"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "04 - Relatórios",
+			"item": [
+				{
+					"name": "GET Faturamento 7 Dias",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/relatorios/faturamento?periodo=1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "relatorios", "faturamento"],
+							"query": [
+								{
+									"key": "periodo",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Top 10 Veículos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/relatorios/top-veiculos",
+							"host": ["{{base_url}}"],
+							"path": ["api", "relatorios", "top-veiculos"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

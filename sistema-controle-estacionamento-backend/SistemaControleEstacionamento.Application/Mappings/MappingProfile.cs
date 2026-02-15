@@ -20,6 +20,7 @@ public class MappingProfile : Profile
 
         // Sessao
         CreateMap<Sessao, SessaoDto>()
+            .ForMember(dest => dest.RowVersion, opt => opt.MapFrom(src => Convert.ToBase64String(src.RowVersion)))
             .ForMember(dest => dest.TempoPermanencia, opt => opt.MapFrom(src =>
                 src.DataHoraSaida.HasValue
                     ? src.DataHoraSaida.Value - src.DataHoraEntrada

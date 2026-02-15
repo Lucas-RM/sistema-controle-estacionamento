@@ -1,6 +1,7 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using SistemaControleEstacionamento.Api.Middleware;
 using SistemaControleEstacionamento.Application.Interfaces;
 using SistemaControleEstacionamento.Application.Mappings;
 using SistemaControleEstacionamento.Application.Services;
@@ -15,10 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Configurar serialização de DateTimeOffset para ISO 8601 (padrão REST)
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        // DateTimeOffset já é serializado como ISO 8601 por padrão no System.Text.Json
-        // Exemplo: "2024-01-15T10:30:00+00:00"
     });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -59,6 +57,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Middleware de tratamento de exceções
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
