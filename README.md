@@ -24,6 +24,7 @@ Este projeto é composto por uma API RESTful desenvolvida em .NET 7 e uma interf
 
 ### Pré-requisitos
 - [.NET 7 SDK](https://dotnet.microsoft.com/download/dotnet/7.0)
+- [SQLite](https://www.sqlite.org/download.html) (necessário para o banco de dados local)
 - [NVM 1.1.12](https://github.com/coreybutler/nvm-windows/releases) para gerenciar o Node.js
 - Node.js 8.17.0
 - Angular CLI 1.0.0 (instalado globalmente)
