@@ -1,0 +1,9 @@
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-group-btn .btn {
+  height: 34px;
+}

@@ -1,0 +1,49 @@
+/* Estilos globais */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f5f5;
+}
+
+/* Ajustes para PrimeNG com Bootstrap */
+.ui-dialog {
+  z-index: 1050 !important;
+}
+
+.ui-widget-overlay {
+  z-index: 1040 !important;
+}
+
+/* Utilitários */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-success {
+  color: #28a745;
+}
+
+.text-danger {
+  color: #dc3545;
+}
+
+.text-muted {
+  color: #6c757d;
+}
+
+/* Loading spinner */
+.fa-spinner {
+  color: #337ab7;
+}
+
+/* Ajustes de espaçamento */
+.mt-20 {
+  margin-top: 20px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}

@@ -1,0 +1,167 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <h2><i class="fa fa-chart-bar"></i> Relatórios</h2>
+      <p class="text-muted">Consultas e estatísticas do estacionamento</p>
+    </div>
+  </div>
+
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">Filtros</h3>
+    </div>
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>Tipo de Relatório</label>
+            <select class="form-control" [(ngModel)]="tipoRelatorioSelecionado">
+              <option *ngFor="let tipo of tiposRelatorio" [value]="tipo.value">{{ tipo.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-4" *ngIf="tipoRelatorioSelecionado === 'faturamento'">
+          <div class="form-group">
+            <label>Período</label>
+            <select class="form-control" [(ngModel)]="periodo">
+              <option *ngFor="let p of periodos" [value]="p.value">{{ p.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-4" *ngIf="tipoRelatorioSelecionado !== 'faturamento'">
+          <div class="form-group">
+            <label>Data e Hora Início</label>
+            <input type="datetime-local" class="form-control" [(ngModel)]="dataInicio">
+          </div>
+        </div>
+
+        <div class="col-md-4" *ngIf="tipoRelatorioSelecionado !== 'faturamento'">
+          <div class="form-group">
+            <label>Data e Hora Fim</label>
+            <input type="datetime-local" class="form-control" [(ngModel)]="dataFim">
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary btn-block" (click)="gerarRelatorio()" [disabled]="loading">
+              <i class="fa fa-refresh"></i> Gerar Relatório
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center">
+    <i class="fa fa-spinner fa-spin fa-3x"></i>
+    <p>Gerando relatório...</p>
+  </div>
+
+  <!-- Relatório de Faturamento -->
+  <div *ngIf="!loading && relatorioGerado && tipoRelatorioSelecionado === 'faturamento'" class="panel panel-primary">
+    <div class="panel-heading">
+      <h3 class="panel-title">Faturamento por Dia</h3>
+    </div>
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="alert alert-info">
+            <strong>Total de Sessões:</strong> {{ getTotalSessoes() }}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="alert alert-success">
+            <strong>Faturamento Total:</strong> R$ {{ getTotalFaturamento() | number:'1.2-2' }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th class="text-right">Total Sessões</th>
+              <th class="text-right">Valor Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of faturamentoData">
+              <td>{{ item.data | periodoFormat:'dd/MM/yyyy' }}</td>
+              <td class="text-right">{{ item.totalSessoes }}</td>
+              <td class="text-right">R$ {{ item.valorTotal | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Relatório Top Veículos -->
+  <div *ngIf="!loading && relatorioGerado && tipoRelatorioSelecionado === 'top-veiculos'" class="panel panel-primary">
+    <div class="panel-heading">
+      <h3 class="panel-title">Top 10 Veículos por Tempo de Permanência</h3>
+    </div>
+    <div class="panel-body">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Posição</th>
+              <th>Placa</th>
+              <th>Modelo</th>
+              <th class="text-right">Tempo Total (horas)</th>
+              <th class="text-right">Qtd Sessões</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of topVeiculosData; let i = index">
+              <td><span class="label label-primary">{{ i + 1 }}º</span></td>
+              <td><strong>{{ item.placa | placaFormat }}</strong></td>
+              <td>{{ item.modelo || 'N/A' }}</td>
+              <td class="text-right">{{ (item.tempoTotalMinutos / 60) | number:'1.1-1' }}h</td>
+              <td class="text-right">{{ item.quantidadeSessoes }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Relatório Ocupação -->
+  <div *ngIf="!loading && relatorioGerado && tipoRelatorioSelecionado === 'ocupacao-hora'" class="panel panel-primary">
+    <div class="panel-heading">
+      <h3 class="panel-title">Ocupação por Hora</h3>
+    </div>
+    <div class="panel-body">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Período</th>
+              <th>Hora</th>
+              <th class="text-right">Quantidade de Veículos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of ocupacaoData">
+              <td>{{ item.periodo | periodoFormat:'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ item.periodo | horaFromPeriodo }}:00</td>
+              <td class="text-right">
+                <span class="label label-info">{{ item.quantidadeVeiculos }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && !relatorioGerado" class="alert alert-info">
+    <i class="fa fa-info-circle"></i> Selecione os filtros e clique em "Gerar Relatório" para visualizar os dados.
+  </div>
+</div>

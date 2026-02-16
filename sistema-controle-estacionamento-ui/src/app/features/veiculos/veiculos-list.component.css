@@ -1,0 +1,16 @@
+h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.table-responsive {
+  margin-top: 20px;
+}
+
+.has-error {
+  border-color: #a94442;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}

@@ -1,0 +1,83 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <h2><i class="fa fa-car"></i> Pátio Agora</h2>
+      <p class="text-muted">Veículos atualmente no estacionamento</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="form-group">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Buscar por placa..." 
+                 [(ngModel)]="placa" (keyup.enter)="buscar()">
+          <span class="input-group-btn">
+            <button class="btn btn-primary" type="button" (click)="buscar()">
+              <i class="fa fa-search"></i> Buscar
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 text-right">
+      <h4>Total no pátio: <span class="label label-primary">{{ totalRecords }}</span></h4>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center">
+    <i class="fa fa-spinner fa-spin fa-3x"></i>
+    <p>Carregando...</p>
+  </div>
+
+  <div *ngIf="!loading && sessoes.length === 0" class="alert alert-info">
+    <i class="fa fa-info-circle"></i> Nenhum veículo no pátio no momento.
+  </div>
+
+  <div class="row">
+    <div class="col-md-4" *ngFor="let sessao of sessoes">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <i class="fa fa-car"></i> {{ sessao.veiculo.placa | placaFormat }}
+          </h3>
+        </div>
+        <div class="panel-body">
+          <p><strong>Modelo:</strong> {{ sessao.veiculo.modelo || 'N/A' }}</p>
+          <p><strong>Cor:</strong> {{ sessao.veiculo.cor || 'N/A' }}</p>
+          <p><strong>Entrada:</strong> {{ sessao.dataHoraEntrada | date:'dd/MM/yyyy HH:mm' }}</p>
+          <p><strong>Permanência:</strong> 
+            <span class="label label-info">{{ sessao.dataHoraEntrada | tempoPermanencia }}</span>
+          </p>
+        </div>
+        <div class="panel-footer text-right">
+          <button class="btn btn-danger" (click)="abrirModalSaida(sessao)">
+            <i class="fa fa-sign-out"></i> Registrar Saída
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmar Saída -->
+<p-dialog header="Confirmar Saída" [(visible)]="mostrarModalSaida" [modal]="true" 
+          [responsive]="true" [width]="500">
+  <div *ngIf="sessaoSelecionada">
+    <p><strong>Placa:</strong> {{ sessaoSelecionada.veiculo.placa | placaFormat }}</p>
+    <p><strong>Modelo:</strong> {{ sessaoSelecionada.veiculo.modelo || 'N/A' }}</p>
+    <p><strong>Entrada:</strong> {{ sessaoSelecionada.dataHoraEntrada | date:'dd/MM/yyyy HH:mm' }}</p>
+    <p><strong>Permanência:</strong> {{ sessaoSelecionada.dataHoraEntrada | tempoPermanencia }}</p>
+    <hr>
+    <h4>Valor a cobrar: <span class="text-success">R$ {{ valorCalculado | number:'1.2-2' }}</span></h4>
+  </div>
+  
+  <p-footer>
+    <button type="button" class="btn btn-default" (click)="cancelarSaida()">
+      <i class="fa fa-times"></i> Cancelar
+    </button>
+    <button type="button" class="btn btn-success" (click)="confirmarSaida()" [disabled]="loading">
+      <i class="fa fa-check"></i> Confirmar Saída
+    </button>
+  </p-footer>
+</p-dialog>
